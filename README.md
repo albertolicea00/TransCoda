@@ -22,16 +22,16 @@
 
 ## ✨ Features
 
-| | |
-|---|---|
-| 💅 **Fabulous design themes** | Switch visual modes (Minimalist Dark, Rainbow, Drag), override accent colors, and adjust glass transparency and text scale |
-| ⚡ **GPU Turbo-Mode** | Auto-detection and automatic configuration of hardware encoders (NVIDIA NVENC, Apple VideoToolbox, Intel QuickSync, AMD AMF) |
-| ✂_**Precision trimming** | Clip your videos with a responsive, frame-accurate timeline range selector |
-| 📁 **Batch SCAN & Queueing** | Scan folders, queue multiple files, and monitor live speeds, ETA, and progress indicators |
-| ⚙️ **Advanced Engine Config** | Swap video engines (AV1, H.265, H.264), select CRF (Quality) vs ABR (Bitrate), and adjust custom bitrates |
-| 🪐 **Cloud integration** | Auto-upload transcoded files directly to Google Drive and Microsoft OneDrive |
-| 🎨 **OS-Native presets** | Includes custom swatches and window chrome mappings matching macOS, Windows 11, Windows 10, and Ubuntu Yaru |
-| 🎭 **Closet Easter Egg** | Canvas confetti triggers and comical progress status logs (*"Your file just came out of the closet 🌈"*) on success |
+|                               |                                                                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 💅 **Fabulous design themes** | Switch visual modes (Minimalist Dark, Rainbow, Drag), override accent colors, and adjust glass transparency and text scale   |
+| ⚡ **GPU Turbo-Mode**         | Auto-detection and automatic configuration of hardware encoders (NVIDIA NVENC, Apple VideoToolbox, Intel QuickSync, AMD AMF) |
+| ✂\_**Precision trimming**     | Clip your videos with a responsive, frame-accurate timeline range selector                                                   |
+| 📁 **Batch SCAN & Queueing**  | Scan folders, queue multiple files, and monitor live speeds, ETA, and progress indicators                                    |
+| ⚙️ **Advanced Engine Config** | Swap video engines (AV1, H.265, H.264), select CRF (Quality) vs ABR (Bitrate), and adjust custom bitrates                    |
+| 🪐 **Cloud integration**      | Auto-upload transcoded files directly to Google Drive and Microsoft OneDrive                                                 |
+| 🎨 **OS-Native presets**      | Includes custom swatches and window chrome mappings matching macOS, Windows 11, Windows 10, and Ubuntu Yaru                  |
+| 🎭 **Closet Easter Egg**      | Canvas confetti triggers and comical progress status logs (_"Your file just came out of the closet 🌈"_) on success          |
 
 ---
 
@@ -39,12 +39,12 @@
 
 TransCoda works with these presets and formats out of the box:
 
-| Category | Supported Options |
-|---|---|
-| 📱 **Device Presets** | YouTube, Instagram Reels, TikTok, Apple TV, and Universal profiles |
-| 📦 **Containers** | Output to `.MP4`, `.MKV`, and `.WebM` configurations |
-| 🎥 **Video Encoders** | AV1, H.265/HEVC, H.264, MPEG-4, MPEG-2, VP8, and VP9 |
-| 🎵 **Audio Encoders** | AAC / HE-AAC, MP3, FLAC, AC3, E-AC3, Opus, and Vorbis |
+| Category               | Supported Options                                                      |
+| ---------------------- | ---------------------------------------------------------------------- |
+| 📱 **Device Presets**  | YouTube, Instagram Reels, TikTok, Apple TV, and Universal profiles     |
+| 📦 **Containers**      | Output to `.MP4`, `.MKV`, and `.WebM` configurations                   |
+| 🎥 **Video Encoders**  | AV1, H.265/HEVC, H.264, MPEG-4, MPEG-2, VP8, and VP9                   |
+| 🎵 **Audio Encoders**  | AAC / HE-AAC, MP3, FLAC, AC3, E-AC3, Opus, and Vorbis                  |
 | 🔗 **Audio Pass-thru** | AC-3, E-AC3, FLAC, DTS, DTS-HD, TrueHD, AAC, Opus, MP3, and MP2 tracks |
 
 → Detailed compilation flags and advanced parameters: **[PLAN.md](PLAN.md)**
@@ -68,6 +68,7 @@ brew install --cask transcoda
 ```
 
 or **[⬇️ Download the latest release](https://github.com/albertolicea00/TransCoda/releases/latest)** — then grab:
+
 - `TransCoda-<version>-arm64.dmg` — Apple Silicon (M1/M2/M3/M4)
 - `TransCoda-<version>.dmg` — Intel
 
@@ -86,6 +87,7 @@ choco install transcoda
 ```
 
 or **[⬇️ Download the latest release](https://github.com/albertolicea00/TransCoda/releases/latest)** — then grab:
+
 - `TransCoda-Setup-<version>.exe` — installer
 - `TransCoda-<version>-win.zip` — portable
 
@@ -109,6 +111,7 @@ chmod +x TransCoda-linux.AppImage
 ```
 
 or **[⬇️ Download the latest release](https://github.com/albertolicea00/TransCoda/releases/latest)** — then grab:
+
 - `TransCoda-<version>.AppImage` — portable (chmod +x, then run)
 - `transcoda_<version>_amd64.deb` — Debian/Ubuntu
 
@@ -117,6 +120,61 @@ or **[⬇️ Download the latest release](https://github.com/albertolicea00/Tran
 ---
 
 📋 [All releases & changelogs](https://github.com/albertolicea00/TransCoda/releases) · 🔧 [Build from source → CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+## 🛠️ Desktop Development Setup
+
+To run and develop TransCoda locally as a desktop application, follow these steps:
+
+### 1. Install Tauri CLI
+
+Install the Tauri CLI tool globally using Cargo (Rust's package manager):
+
+```bash
+cargo install tauri-cli
+```
+
+### 2. Configure package.json
+
+Verify that the `tauri` development script is configured in `package.json`:
+
+```json
+{
+  "scripts": {
+    "tauri": "tauri dev"
+  }
+}
+```
+
+### 3. Run Development Mode
+
+Start the Vite dev server and launch the Tauri window:
+
+```bash
+# Using npm
+npm run tauri
+
+# Using pnpm (recommended for this project)
+pnpm tauri
+
+# Using Cargo directly
+cargo tauri dev
+```
+
+### 4. Build Configuration (`src-tauri/tauri.conf.json`)
+
+The desktop environment automatically starts the frontend Vite server using:
+
+```json
+"build": {
+  "beforeDevCommand": "npm run dev",
+  "devUrl": "http://localhost:5173"
+}
+```
+
+> [!NOTE]
+> Since TransCoda uses **Tauri v2**, the configuration uses `devUrl` instead of Tauri v1's `devPath` to prevent schema validation errors.
 
 ---
 
