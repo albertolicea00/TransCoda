@@ -9,9 +9,6 @@
   "permissions": [
     "core:default",
     "core:window:default",
-    "core:event:default",
-    "allow-update_tray_status",
-    "allow-set_close_to_tray",
-    "allow-open_settings_window"
+    "core:event:default"
   ]
 }

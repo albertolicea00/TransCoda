@@ -10,7 +10,7 @@ use tauri::{
 use rfd::{MessageDialog, MessageLevel};
 
 struct TrayState {
-    progress_item: MenuItem,
+    progress_item: MenuItem<tauri::Wry>,
 }
 
 struct AppSettings {
@@ -192,8 +192,7 @@ fn main() {
 
             let tray_menu = Menu::with_items(app, &[&show_item, &progress_item, &quit_item])?;
 
-            let _tray = TrayIconBuilder::new()
-                .id("main_tray")
+            let _tray = TrayIconBuilder::<tauri::Wry>::with_id("main_tray")
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&tray_menu)
                 .tooltip("TransCoda")
