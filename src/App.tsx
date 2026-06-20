@@ -5,12 +5,12 @@ import {
   Zap,
   CheckCircle2,
   Sparkles,
-  X,
   FileVideo,
   Globe,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { invoke } from '@tauri-apps/api/core';
+import { listen, emit } from '@tauri-apps/api/event';
 import { applyTheme } from './lib/theme';
 
 const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
@@ -39,6 +39,17 @@ const THEMES_LIST = [
 ];
 
 export default function App() {
+  // Routing State
+  const [currentView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('window') === 'settings') {
+        return 'settings';
+      }
+    }
+    return 'main';
+  });
+
   // Theme States
   const [activeThemeId, setActiveThemeId] = useState('transcoda-minimal');
   const [themeSettings, setThemeSettings] = useState({
@@ -48,8 +59,54 @@ export default function App() {
     fontScale: 100,
   });
 
-  // Modal State
-  const [showConfigModal, setShowConfigModal] = useState(false);
+  // Listen for cross-window theme and settings changes
+  useEffect(() => {
+    if (!isTauri) return;
+
+    const unlistenTheme = listen('theme-changed', (event: any) => {
+      const themeId = event.payload;
+      if (themeId && themeId !== activeThemeId) {
+        setActiveThemeId(themeId);
+      }
+    });
+
+    const unlistenSettings = listen('theme-settings-changed', (event: any) => {
+      const patch = event.payload;
+      if (patch) {
+        setThemeSettings(prev => ({
+          ...prev,
+          ...patch,
+        }));
+      }
+    });
+
+    return () => {
+      unlistenTheme.then(f => f());
+      unlistenSettings.then(f => f());
+    };
+  }, [activeThemeId]);
+
+  // Wrappers to change theme and broadcast to other windows
+  const handleThemeChange = (themeId: string) => {
+    setActiveThemeId(themeId);
+    if (isTauri) {
+      emit('theme-changed', themeId).catch((err: any) => {
+        console.error('Failed to emit theme change:', err);
+      });
+    }
+  };
+
+  const handleThemeSettingChange = (patch: Partial<typeof themeSettings>) => {
+    setThemeSettings(prev => {
+      const next = { ...prev, ...patch };
+      if (isTauri) {
+        emit('theme-settings-changed', patch).catch((err: any) => {
+          console.error('Failed to emit theme settings change:', err);
+        });
+      }
+      return next;
+    });
+  };
 
 
   // App Parameters (Screenshot 1)
@@ -145,7 +202,7 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
         e.preventDefault();
-        setActiveThemeId('transcoda-drag');
+        handleThemeChange('transcoda-drag');
         confetti({
           particleCount: 150,
           spread: 80,
@@ -325,11 +382,235 @@ export default function App() {
   };
 
   const handleThemeSetting = (patch: Partial<typeof themeSettings>) => {
-    setThemeSettings(prev => ({
-      ...prev,
-      ...patch,
-    }));
+    handleThemeSettingChange(patch);
   };
+
+  const closeSettingsWindow = () => {
+    if (typeof window !== 'undefined') {
+      window.close();
+    }
+  };
+
+  if (currentView === 'settings') {
+    return (
+      <div className="app-container settings-window-view" style={{ minHeight: '100vh', padding: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Background Orbs */}
+        <div className="bg-glow-1"></div>
+        <div className="bg-glow-2"></div>
+
+        <header className="custom-titlebar" style={{ marginBottom: '15px' }}>
+          <div className="titlebar-left">
+            <span className="studio-badge" style={{ background: 'var(--primary)', color: '#fff' }}>Preferences</span>
+            <span className="project-name">TransCoda Global Settings</span>
+          </div>
+        </header>
+
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', paddingRight: '4px' }}>
+          {/* OS & Background Settings */}
+          <div className="glass-card" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+              OS & Background Integration
+            </h3>
+            
+            <div className="gpu-card" style={{ background: 'var(--bg-input)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Zap size={20} style={{ color: 'var(--primary)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>Close to System Tray</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Keep application running in background when closed
+                  </span>
+                </div>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={osSettings.closeToTray}
+                  onChange={e => setOsSettings(prev => ({ ...prev, closeToTray: e.target.checked }))}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+
+            <div className="slider-container">
+              <span className="option-label">System Tray Status Format</span>
+              <div className="audio-toggle-group" style={{ marginTop: '6px' }}>
+                {['both', 'percent', 'filename', 'status'].map(fmt => (
+                  <button
+                    key={fmt}
+                    className={`audio-btn ${osSettings.trayFormat === fmt ? 'selected' : ''}`}
+                    onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: fmt }))}
+                    style={{ fontSize: '11px', padding: '6px 10px' }}
+                  >
+                    {fmt === 'both' ? 'Status + %' : fmt === 'percent' ? 'Percentage' : fmt === 'filename' ? 'Filename' : 'Status Only'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Transcoding Engine Settings */}
+          <div className="glass-card" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+              Transcoding Engine
+            </h3>
+
+            <div className="slider-container">
+              <span className="option-label">Video Engine</span>
+              <div className="codec-grid" style={{ marginTop: '6px' }}>
+                {['av1', 'h265', 'h264'].map(engine => (
+                  <div
+                    key={engine}
+                    className={`codec-card ${videoEngine === engine ? 'selected' : ''}`}
+                    onClick={() => setVideoEngine(engine as any)}
+                  >
+                    <span className="codec-name">{engine.toUpperCase()}</span>
+                    <span className="codec-desc">{engine === 'av1' ? 'Next Gen' : engine === 'h265' ? 'Efficient' : 'Universal'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="gpu-card" style={{ background: 'var(--bg-input)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Cpu size={20} style={{ color: 'var(--primary)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>Hardware Acceleration</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Auto-detect encoding chips (NVENC, VideoToolbox, etc.)</span>
+                </div>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={hwAcceleration}
+                  onChange={e => setHwAcceleration(e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+
+            <div className="slider-container">
+              <div className="bitrate-mode-row">
+                <span className="option-label">Bitrate Control</span>
+                <div className="bitrate-btn-group">
+                  <button
+                    className={`bitrate-mode-btn ${bitrateControl === 'crf' ? 'selected' : ''}`}
+                    onClick={() => setBitrateControl('crf')}
+                  >
+                    CRF
+                  </button>
+                  <button
+                    className={`bitrate-mode-btn ${bitrateControl === 'abr' ? 'selected' : ''}`}
+                    onClick={() => setBitrateControl('abr')}
+                  >
+                    ABR
+                  </button>
+                </div>
+              </div>
+
+              {bitrateControl === 'crf' ? (
+                <div className="slider-container" style={{ marginTop: '10px' }}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="51"
+                    value={crfValue}
+                    onChange={e => setCrfValue(Number(e.target.value))}
+                    className="range-input"
+                  />
+                  <div className="slider-boundaries" style={{ marginTop: '4px' }}>
+                    <span>Faster (51)</span>
+                    <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{crfValue}</span>
+                    <span>High Quality (0)</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="inputs-row" style={{ marginTop: '10px' }}>
+                  <div className="input-field-group">
+                    <span className="field-label">Target (Mbps)</span>
+                    <input
+                      type="text"
+                      value={targetBitrateInput}
+                      onChange={e => setTargetBitrateInput(e.target.value)}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="input-field-group">
+                    <span className="field-label">Max (Mbps)</span>
+                    <input
+                      type="text"
+                      value={maxBitrateInput}
+                      onChange={e => setMaxBitrateInput(e.target.value)}
+                      className="field-input"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Theme & Styling Settings */}
+          <div className="glass-card" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+              Appearance (The Wardrobe)
+            </h3>
+
+            <div className="themes-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {THEMES_LIST.map(theme => (
+                <div
+                  key={theme.id}
+                  className={`theme-card ${activeThemeId === theme.id ? 'active' : ''}`}
+                  onClick={() => handleThemeChange(theme.id)}
+                  style={{ padding: '6px' }}
+                >
+                  <div className="theme-preview-colors" style={{ gap: '4px' }}>
+                    <div className="preview-dot" style={{ width: '8px', height: '8px', background: theme.variables['--primary'] }}></div>
+                    <div className="preview-dot" style={{ width: '8px', height: '8px', background: theme.variables['--bg-deep'] }}></div>
+                    <div className="preview-dot" style={{ width: '8px', height: '8px', background: theme.variables['--text-primary'] }}></div>
+                  </div>
+                  <span className="theme-card-name" style={{ fontSize: '10px', marginTop: '4px' }}>{theme.name}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                <span>Glass Intensity</span>
+                <span>{themeSettings.glassIntensity}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={themeSettings.glassIntensity}
+                onChange={e => handleThemeSetting({ glassIntensity: Number(e.target.value) })}
+                style={{ width: '100%', accentColor: 'var(--primary)' }}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                <span>App Transparency</span>
+                <span>{themeSettings.appTransparency}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={themeSettings.appTransparency}
+                onChange={e => handleThemeSetting({ appTransparency: Number(e.target.value) })}
+                style={{ width: '100%', accentColor: 'var(--primary)' }}
+              />
+            </div>
+          </div>
+        </main>
+
+        <footer style={{ marginTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
+          <button className="solid-btn" onClick={closeSettingsWindow} style={{ padding: '10px 24px' }}>
+            Close Preferences
+          </button>
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -460,8 +741,14 @@ export default function App() {
             {/* Click triggers engine configuration modal */}
             <button
               className="config-trigger-btn"
-              title="Engine Configurations"
-              onClick={() => setShowConfigModal(true)}
+              title="Preferences"
+              onClick={() => {
+                if (isTauri) {
+                  invoke('open_settings_window').catch((err: any) => {
+                    console.error('Failed to open settings window:', err);
+                  });
+                }
+              }}
             >
               <Sliders size={20} />
             </button>
@@ -589,7 +876,7 @@ export default function App() {
                 <div
                   key={theme.id}
                   className={`theme-card ${activeThemeId === theme.id ? 'active' : ''}`}
-                  onClick={() => setActiveThemeId(theme.id)}
+                  onClick={() => handleThemeChange(theme.id)}
                 >
                   <div className="theme-preview-colors">
                     <div
@@ -657,209 +944,6 @@ export default function App() {
         </section>
       </main>
 
-      {/* Engine Configurations Modal overlay (Screenshot 2) */}
-      {showConfigModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <header className="modal-header">
-              <div className="modal-title">
-                <Sliders size={18} style={{ color: 'var(--primary)' }} />
-                <span>Engine Configurations</span>
-              </div>
-              <button className="modal-close-btn" onClick={() => setShowConfigModal(false)}>
-                <X size={18} />
-              </button>
-            </header>
-
-            <div className="modal-body">
-              {/* Video Engine Selection */}
-              <div className="modal-section">
-                <div className="modal-section-title">Video Engine</div>
-                <div className="codec-grid">
-                  <div
-                    className={`codec-card ${videoEngine === 'av1' ? 'selected' : ''}`}
-                    onClick={() => setVideoEngine('av1')}
-                  >
-                    <span className="codec-name">AV1</span>
-                    <span className="codec-desc">Next Gen</span>
-                  </div>
-                  <div
-                    className={`codec-card ${videoEngine === 'h265' ? 'selected' : ''}`}
-                    onClick={() => setVideoEngine('h265')}
-                  >
-                    <span className="codec-name">H.265</span>
-                    <span className="codec-desc">Efficient</span>
-                  </div>
-                  <div
-                    className={`codec-card ${videoEngine === 'h264' ? 'selected' : ''}`}
-                    onClick={() => setVideoEngine('h264')}
-                  >
-                    <span className="codec-name">H.264</span>
-                    <span className="codec-desc">Universal</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hardware Acceleration Auto-detect Engine */}
-              <div className="modal-section">
-                <div className="modal-section-title">Hardware Acceleration</div>
-                <div className="gpu-card" style={{ background: 'var(--bg-input)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Cpu size={20} style={{ color: 'var(--primary)' }} />
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600 }}>Auto-detect Engine</span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        NVIDIA NVENC (detected)
-                      </span>
-                    </div>
-                  </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={hwAcceleration}
-                      onChange={e => setHwAcceleration(e.target.checked)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Bitrate Control */}
-              <div className="modal-section">
-                <div className="bitrate-mode-row">
-                  <div className="modal-section-title">Bitrate Control</div>
-                  <div className="bitrate-btn-group">
-                    <button
-                      className={`bitrate-mode-btn ${bitrateControl === 'crf' ? 'selected' : ''}`}
-                      onClick={() => setBitrateControl('crf')}
-                    >
-                      CRF
-                    </button>
-                    <button
-                      className={`bitrate-mode-btn ${bitrateControl === 'abr' ? 'selected' : ''}`}
-                      onClick={() => setBitrateControl('abr')}
-                    >
-                      ABR
-                    </button>
-                  </div>
-                </div>
-
-                {bitrateControl === 'crf' ? (
-                  <div className="slider-container" style={{ marginTop: '10px' }}>
-                    <input
-                      type="range"
-                      min="0"
-                      max="51"
-                      value={crfValue}
-                      onChange={e => setCrfValue(Number(e.target.value))}
-                      className="range-input"
-                    />
-                    <div className="slider-boundaries" style={{ marginTop: '4px' }}>
-                      <span>Faster / Low Qual (51)</span>
-                      <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                        {crfValue} (Balanced)
-                      </span>
-                      <span>Slower / High Qual (0)</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="inputs-row" style={{ marginTop: '10px' }}>
-                    <div className="input-field-group">
-                      <span className="field-label">Target Bitrate (Mbps)</span>
-                      <input
-                        type="text"
-                        value={targetBitrateInput}
-                        onChange={e => setTargetBitrateInput(e.target.value)}
-                        className="field-input"
-                      />
-                    </div>
-                    <div className="input-field-group">
-                      <span className="field-label">Max Bitrate (Mbps)</span>
-                      <input
-                        type="text"
-                        value={maxBitrateInput}
-                        onChange={e => setMaxBitrateInput(e.target.value)}
-                        className="field-input"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* OS & Background Settings */}
-              <div className="modal-section" style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '15px' }}>
-                <div className="modal-section-title">OS & Background Integration</div>
-                
-                {/* Close to System Tray Toggle */}
-                <div className="gpu-card" style={{ background: 'var(--bg-input)', marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Zap size={20} style={{ color: 'var(--primary)' }} />
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600 }}>Close to System Tray</span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        Keep application running in background when closed
-                      </span>
-                    </div>
-                  </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={osSettings.closeToTray}
-                      onChange={e => setOsSettings(prev => ({ ...prev, closeToTray: e.target.checked }))}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-
-                {/* Tray Status Format Toggle Button Group */}
-                <div className="slider-container">
-                  <span className="option-label">System Tray Status Format</span>
-                  <div className="audio-toggle-group" style={{ marginTop: '6px' }}>
-                    <button
-                      className={`audio-btn ${osSettings.trayFormat === 'both' ? 'selected' : ''}`}
-                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'both' }))}
-                      style={{ fontSize: '11px', padding: '6px 10px' }}
-                    >
-                      Status + %
-                    </button>
-                    <button
-                      className={`audio-btn ${osSettings.trayFormat === 'percent' ? 'selected' : ''}`}
-                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'percent' }))}
-                      style={{ fontSize: '11px', padding: '6px 10px' }}
-                    >
-                      Percentage
-                    </button>
-                    <button
-                      className={`audio-btn ${osSettings.trayFormat === 'filename' ? 'selected' : ''}`}
-                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'filename' }))}
-                      style={{ fontSize: '11px', padding: '6px 10px' }}
-                    >
-                      Filename
-                    </button>
-                    <button
-                      className={`audio-btn ${osSettings.trayFormat === 'status' ? 'selected' : ''}`}
-                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'status' }))}
-                      style={{ fontSize: '11px', padding: '6px 10px' }}
-                    >
-                      Status Only
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <footer className="modal-footer">
-              <div className="footer-left">
-                <button className="outline-btn">Save Preset</button>
-                <button className="flat-btn">Reset</button>
-              </div>
-              <button className="solid-btn" onClick={() => setShowConfigModal(false)}>
-                Apply Changes
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
 
       {/* Success Closet Toast notification */}
       {showToast && (
