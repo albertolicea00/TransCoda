@@ -1,0 +1,29 @@
+{
+  "name": "transcoda",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@11.5.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"*.json\" \"*.md\""
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.3",
+    "framer-motion": "^11.13.1",
+    "lucide-react": "^0.454.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.6.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "prettier": "^3.1.1",
+    "typescript": "^5.6.2",
+    "vite": "^6.0.3"
+  }
+}
