@@ -1,7 +1,8 @@
 export default {
   id: 'os-macos-light',
   name: 'macOS Light',
-  description: 'Aqua inspired light mode, high vibrancy, standard native spacing, and SF Pro typography.',
+  description:
+    'Aqua inspired light mode, high vibrancy, standard native spacing, and SF Pro typography.',
   author: 'TransCoda',
   mode: 'light',
   swatches: ['#0A84FF', '#F6F6F6', '#000000'],
@@ -32,5 +33,5 @@ export default {
     '--radius-sm': '6px',
     '--radius-md': '10px',
     '--radius-lg': '14px',
-  }
+  },
 };

@@ -2,8 +2,16 @@
 // Builds a :root CSS variables block from a theme + user settings and injects it.
 
 export const ACCENT_PRESETS = [
-  '#FF1493', '#8A2BE2', '#34D399', '#0A84FF', '#2DD4BF',
-  '#FFD700', '#FF8A80', '#00FF66', '#E95420', '#C4B5FD'
+  '#FF1493',
+  '#8A2BE2',
+  '#34D399',
+  '#0A84FF',
+  '#2DD4BF',
+  '#FFD700',
+  '#FF8A80',
+  '#00FF66',
+  '#E95420',
+  '#C4B5FD',
 ];
 
 export interface Theme {
@@ -27,7 +35,13 @@ export interface ThemeSettings {
 export function hexToRgba(hex: string, alpha: number): string | null {
   if (typeof hex !== 'string') return null;
   const h = hex.trim().replace('#', '');
-  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const full =
+    h.length === 3
+      ? h
+          .split('')
+          .map(c => c + c)
+          .join('')
+      : h;
   if (full.length !== 6) return null;
   const r = parseInt(full.slice(0, 2), 16);
   const g = parseInt(full.slice(2, 4), 16);
@@ -66,11 +80,14 @@ export function buildThemeCss(theme: Theme, settings: ThemeSettings = {}): strin
   }
 
   // App Transparency
-  const appTransparency = typeof settings.appTransparency === 'number' ? settings.appTransparency : 100;
+  const appTransparency =
+    typeof settings.appTransparency === 'number' ? settings.appTransparency : 100;
   if (appTransparency < 100) {
     if (vars['--bg-deep']) {
       const rgb = parseRgb(vars['--bg-deep']);
-      if (rgb) vars['--bg-deep'] = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${(appTransparency / 100).toFixed(3)})`;
+      if (rgb)
+        vars['--bg-deep'] =
+          `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${(appTransparency / 100).toFixed(3)})`;
     }
     vars['--gradient-dark'] = 'none';
   }
@@ -87,7 +104,9 @@ export function buildThemeCss(theme: Theme, settings: ThemeSettings = {}): strin
     vars['--gradient-hover'] = `linear-gradient(135deg, ${accent} 0%, ${accent} 100%)`;
   }
 
-  const body = Object.entries(vars).map(([k, v]) => `  ${k}: ${v};`).join('\n');
+  const body = Object.entries(vars)
+    .map(([k, v]) => `  ${k}: ${v};`)
+    .join('\n');
 
   return `:root {\n${body}\n}\n${theme.css || ''}`;
 }

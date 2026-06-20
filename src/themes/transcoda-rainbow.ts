@@ -32,5 +32,5 @@ export default {
     '--radius-sm': '8px',
     '--radius-md': '14px',
     '--radius-lg': '20px',
-  }
+  },
 };

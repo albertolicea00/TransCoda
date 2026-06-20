@@ -3,27 +3,27 @@
 :root {
   /* Initial default values, matching transcoda-minimal */
   --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-  --bg-deep: #1E222B;
-  --bg-dark: #252A34;
+  --bg-deep: #1e222b;
+  --bg-dark: #252a34;
   --bg-card: rgba(37, 42, 52, 0.7);
   --bg-panel: rgba(30, 34, 42, 0.85);
   --bg-input: rgba(255, 255, 255, 0.05);
   --bg-hover: rgba(255, 255, 255, 0.06);
 
-  --primary: #34D399;
+  --primary: #34d399;
   --primary-glow: rgba(52, 211, 153, 0.25);
-  --accent: #2DD4BF;
+  --accent: #2dd4bf;
   --accent-glow: rgba(45, 212, 191, 0.25);
 
-  --gradient-primary: linear-gradient(135deg, #2DD4BF 0%, #34D399 50%, #4ADE80 100%);
-  --gradient-hover: linear-gradient(135deg, #26B8A6 0%, #2CBA85 50%, #3FC46E 100%);
-  --gradient-dark: linear-gradient(180deg, #252A34 0%, #1E222B 100%);
+  --gradient-primary: linear-gradient(135deg, #2dd4bf 0%, #34d399 50%, #4ade80 100%);
+  --gradient-hover: linear-gradient(135deg, #26b8a6 0%, #2cba85 50%, #3fc46e 100%);
+  --gradient-dark: linear-gradient(180deg, #252a34 0%, #1e222b 100%);
 
-  --text-primary: #ECEFF4;
-  --text-secondary: #ABB2C0;
-  --text-muted: #6C7689;
-  --text-success: #34D399;
-  --text-error: #BF616A;
+  --text-primary: #eceff4;
+  --text-secondary: #abb2c0;
+  --text-muted: #6c7689;
+  --text-success: #34d399;
+  --text-error: #bf616a;
 
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(52, 211, 153, 0.5);
@@ -168,9 +168,15 @@ body {
   opacity: 1;
 }
 
-.control-close { background: #FF5F56; }
-.control-minimize { background: #FFBD2E; }
-.control-maximize { background: #27C93F; }
+.control-close {
+  background: #ff5f56;
+}
+.control-minimize {
+  background: #ffbd2e;
+}
+.control-maximize {
+  background: #27c93f;
+}
 
 /* Main Dashboard Panel */
 .main-dashboard {
@@ -218,7 +224,9 @@ body {
   border-radius: var(--radius-md);
   padding: 20px;
   box-shadow: var(--shadow-lg);
-  transition: border-color 0.25s, box-shadow 0.25s;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
 }
 
 .glass-card:hover {
@@ -330,8 +338,12 @@ body {
   font-weight: 700;
 }
 
-.trim-in { color: var(--primary); }
-.trim-out { color: var(--accent); }
+.trim-in {
+  color: var(--primary);
+}
+.trim-out {
+  color: var(--accent);
+}
 
 .timeline-scrubber {
   position: relative;
@@ -417,7 +429,9 @@ body {
   cursor: pointer;
   padding: 6px;
   border-radius: var(--radius-sm);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .config-trigger-btn:hover {
@@ -450,7 +464,10 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+  transition:
+    background 0.25s,
+    border-color 0.25s,
+    box-shadow 0.25s;
 }
 
 .select-card:hover {
@@ -568,7 +585,7 @@ body {
 
 .slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 16px;
   width: 16px;
   left: 3px;
@@ -638,7 +655,9 @@ input:checked + .slider:before {
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 15px var(--primary-glow);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   margin-top: auto;
 }
 
@@ -702,7 +721,9 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .modal-close-btn:hover {
@@ -977,7 +998,9 @@ input:checked + .slider:before {
 .toast {
   background: rgba(20, 20, 30, 0.85);
   border: 1px solid var(--primary);
-  box-shadow: var(--shadow-glow), 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow:
+    var(--shadow-glow),
+    0 10px 30px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   padding: 16px 24px;
   border-radius: 9999px;
@@ -991,8 +1014,14 @@ input:checked + .slider:before {
 }
 
 @keyframes slideUp {
-  0% { transform: translate(-50%, 50px); opacity: 0; }
-  100% { transform: translate(-50%, 0); opacity: 1; }
+  0% {
+    transform: translate(-50%, 50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
 }
 
 /* Live progress bar for encoding */
@@ -1018,7 +1047,9 @@ input:checked + .slider:before {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .encoding-title {
@@ -1047,4 +1078,97 @@ input:checked + .slider:before {
   background: var(--gradient-primary);
   width: 0%;
   transition: width 0.1s linear;
+}
+
+/* Drag and Drop Fullscreen Overlay */
+.drag-drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 5, 25, 0.75);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.drag-drop-zone {
+  border: 3px dashed var(--primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
+  box-shadow:
+    var(--shadow-glow),
+    0 15px 40px rgba(0, 0, 0, 0.7);
+  padding: 50px;
+  text-align: center;
+  max-width: 550px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  transform: scale(0.95);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  to {
+    transform: scale(1);
+  }
+}
+
+.drag-icons {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  color: var(--primary);
+}
+
+.drag-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.drag-icon-separator {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.drag-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.drag-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.drag-glow-text {
+  color: var(--primary);
+  text-shadow: 0 0 10px var(--primary-glow);
+  font-weight: 700;
 }

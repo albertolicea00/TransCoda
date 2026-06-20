@@ -1,7 +1,8 @@
 export default {
   id: 'transcoda-drag',
   name: 'Drag Mode',
-  description: 'Glitzy neon pinks and purples, custom animated buttons, and absolute visual stardom.',
+  description:
+    'Glitzy neon pinks and purples, custom animated buttons, and absolute visual stardom.',
   author: 'TransCoda',
   mode: 'dark',
   swatches: ['#FF1493', '#8A2BE2', '#FFD700'],
@@ -50,5 +51,5 @@ export default {
       border: 1px solid rgba(255, 20, 147, 0.25) !important;
       box-shadow: 0 0 15px rgba(255, 20, 147, 0.1), var(--shadow-lg) !important;
     }
-  `
+  `,
 };

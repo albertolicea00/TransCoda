@@ -1,7 +1,8 @@
 export default {
   id: 'os-macos-dark',
   name: 'macOS Dark',
-  description: 'Aqua inspired dark mode, high vibrancy, standard native spacing, and SF Pro typography.',
+  description:
+    'Aqua inspired dark mode, high vibrancy, standard native spacing, and SF Pro typography.',
   author: 'TransCoda',
   mode: 'dark',
   swatches: ['#0A84FF', '#1E1E1E', '#FFFFFF'],
@@ -32,5 +33,5 @@ export default {
     '--radius-sm': '6px',
     '--radius-md': '10px',
     '--radius-lg': '14px',
-  }
+  },
 };
