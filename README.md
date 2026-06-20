@@ -158,6 +158,9 @@ npm run tauri
 # Using pnpm (recommended for this project)
 pnpm tauri
 
+# Using npx (executes local CLI)
+npx tauri dev
+
 # Using Cargo directly
 cargo tauri dev
 ```
