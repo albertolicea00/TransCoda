@@ -10,7 +10,10 @@ import {
   Globe,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { invoke } from '@tauri-apps/api/core';
 import { applyTheme } from './lib/theme';
+
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
 // Import themes
 import transcodaMinimal from './themes/transcoda-minimal';
@@ -48,6 +51,7 @@ export default function App() {
   // Modal State
   const [showConfigModal, setShowConfigModal] = useState(false);
 
+
   // App Parameters (Screenshot 1)
   const [outputFormat, setOutputFormat] = useState('prores'); // 'prores' | 'h264' | 'h265'
   const [targetBitrate, setTargetBitrate] = useState(120); // 120 Mbps
@@ -84,6 +88,47 @@ export default function App() {
   const [encodingLog, setEncodingLog] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Your file just came out of the closet! 🌈✨');
+
+  // OS & Background Settings
+  const [osSettings, setOsSettings] = useState({
+    closeToTray: true,
+    trayFormat: 'both', // 'both' | 'percent' | 'filename' | 'status'
+  });
+
+  // Sync closeToTray to Rust backend
+  useEffect(() => {
+    if (isTauri) {
+      invoke('set_close_to_tray', { value: osSettings.closeToTray }).catch((err: any) => {
+        console.error('Failed to set close to tray:', err);
+      });
+    }
+  }, [osSettings.closeToTray]);
+
+  // Sync encoding progress/status to OS system tray
+  useEffect(() => {
+    if (!isTauri) return;
+
+    let statusText = 'No active tasks';
+    let tooltipText = 'TransCoda - Ready';
+
+    if (isEncoding) {
+      if (osSettings.trayFormat === 'percent') {
+        statusText = `Glow-up: ${encodingProgress}%`;
+      } else if (osSettings.trayFormat === 'filename') {
+        statusText = `Glow-up: ${metadata.title}`;
+      } else if (osSettings.trayFormat === 'status') {
+        statusText = encodingLog;
+      } else {
+        // 'both'
+        statusText = `${encodingLog} (${encodingProgress}%)`;
+      }
+      tooltipText = `TransCoda - ${encodingProgress}% - ${metadata.title}`;
+    }
+
+    invoke('update_tray_status', { statusText, tooltipText }).catch((err: any) => {
+      console.error('Failed to update tray status:', err);
+    });
+  }, [isEncoding, encodingProgress, encodingLog, osSettings.trayFormat, metadata.title]);
 
   // Apply Theme Effect
   useEffect(() => {
@@ -739,6 +784,67 @@ export default function App() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* OS & Background Settings */}
+              <div className="modal-section" style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '15px' }}>
+                <div className="modal-section-title">OS & Background Integration</div>
+                
+                {/* Close to System Tray Toggle */}
+                <div className="gpu-card" style={{ background: 'var(--bg-input)', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Zap size={20} style={{ color: 'var(--primary)' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600 }}>Close to System Tray</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Keep application running in background when closed
+                      </span>
+                    </div>
+                  </div>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={osSettings.closeToTray}
+                      onChange={e => setOsSettings(prev => ({ ...prev, closeToTray: e.target.checked }))}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+
+                {/* Tray Status Format Toggle Button Group */}
+                <div className="slider-container">
+                  <span className="option-label">System Tray Status Format</span>
+                  <div className="audio-toggle-group" style={{ marginTop: '6px' }}>
+                    <button
+                      className={`audio-btn ${osSettings.trayFormat === 'both' ? 'selected' : ''}`}
+                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'both' }))}
+                      style={{ fontSize: '11px', padding: '6px 10px' }}
+                    >
+                      Status + %
+                    </button>
+                    <button
+                      className={`audio-btn ${osSettings.trayFormat === 'percent' ? 'selected' : ''}`}
+                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'percent' }))}
+                      style={{ fontSize: '11px', padding: '6px 10px' }}
+                    >
+                      Percentage
+                    </button>
+                    <button
+                      className={`audio-btn ${osSettings.trayFormat === 'filename' ? 'selected' : ''}`}
+                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'filename' }))}
+                      style={{ fontSize: '11px', padding: '6px 10px' }}
+                    >
+                      Filename
+                    </button>
+                    <button
+                      className={`audio-btn ${osSettings.trayFormat === 'status' ? 'selected' : ''}`}
+                      onClick={() => setOsSettings(prev => ({ ...prev, trayFormat: 'status' }))}
+                      style={{ fontSize: '11px', padding: '6px 10px' }}
+                    >
+                      Status Only
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
